@@ -46,7 +46,7 @@ func main() {
 	router.Get("/err", HandlerErr)
 	router.Get("/youtube/channel/stats", cfg.getChannelStats)
 
-	fs := http.FileServer(http.Dir("client/react_content"))
+	fs := http.FileServer(http.Dir("."))
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)
 	})
