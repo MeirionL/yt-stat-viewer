@@ -42,9 +42,6 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	fsHandler := cfg.handlerHTML(http.StripPrefix("/app", http.FileServer(http.Dir("client/react_content"))))
-	router.Handle("/app/*", fsHandler)
-	router.Handle("/app", fsHandler)
 	router.Get("/healthz", HandlerReadiness)
 	router.Get("/err", HandlerErr)
 	router.Get("/youtube/channel/stats", cfg.getChannelStats)
@@ -61,10 +58,4 @@ func main() {
 
 	log.Printf("Server starting on port %v", portString)
 	log.Fatal(srv.ListenAndServe())
-}
-
-func (cfg *apiConfig) handlerHTML(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, r)
-	})
 }
