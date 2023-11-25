@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
 
-type YoutubeStats struct {
-	Subscribers int    `json:"subscribers"`
-	ChannelName string `json:"channel_name"`
-	Views       int    `json:"views"`
+func (cfg *apiConfig) getStats(w http.ResponseWriter, r *http.Request) {
+	RespondWithJSON(w, http.StatusOK, cfg.channels)
 }
 
-func (cfg *apiConfig) getChannelStats(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) getYTChannelStats(w http.ResponseWriter, r *http.Request) {
+	channelString := chi.URLParam(r, "channel")
 	ctx := context.Background()
 	yts, err := youtube.NewService(ctx, option.WithAPIKey(cfg.ytApiKey))
 	if err != nil {
@@ -24,7 +24,7 @@ func (cfg *apiConfig) getChannelStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	firstCall := yts.Search.List([]string{"snippet"}).Type("channel").Q("Mogul Mail")
+	firstCall := yts.Search.List([]string{"snippet"}).Type("channel").Q(channelString).MaxResults(5)
 
 	firstResponse, err := firstCall.Do()
 	if err != nil {
@@ -45,13 +45,14 @@ func (cfg *apiConfig) getChannelStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	yt := YoutubeStats{}
 	if len(firstResponse.Items) > 0 && len(secondResponse.Items) > 0 {
-		yt = YoutubeStats{
+		newChannel := Channel{
 			Subscribers: int(secondResponse.Items[0].Statistics.SubscriberCount),
-			ChannelName: firstResponse.Items[0].Snippet.ChannelTitle,
+			Title:       firstResponse.Items[0].Snippet.ChannelTitle,
 			Views:       int(secondResponse.Items[0].Statistics.ViewCount),
+			Platform:    "YouTube",
 		}
+		cfg.channels = append(cfg.channels, newChannel)
 	}
 
 	// Code that only works for legacy channels
@@ -69,5 +70,5 @@ func (cfg *apiConfig) getChannelStats(w http.ResponseWriter, r *http.Request) {
 	// 	response.Items[0].Snippet.Title,
 	// 	response.Items[0].Statistics.ViewCount))
 
-	RespondWithJSON(w, http.StatusOK, yt)
+	RespondWithJSON(w, http.StatusOK, cfg.channels)
 }

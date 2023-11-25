@@ -10,8 +10,18 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type Channel struct {
+	Subscribers int    `json:"subscribers"`
+	Title       string `json:"title"`
+	Views       int    `json:"views"`
+	Platform    string `json:"platform"`
+}
+
 type apiConfig struct {
-	ytApiKey string
+	ytApiKey   string
+	channels   []Channel
+	query      *string
+	maxResults *int64
 }
 
 func main() {
@@ -29,6 +39,7 @@ func main() {
 
 	cfg := apiConfig{
 		ytApiKey: ytApiKey,
+		channels: []Channel{},
 	}
 
 	router := chi.NewRouter()
@@ -44,7 +55,8 @@ func main() {
 
 	router.Get("/healthz", HandlerReadiness)
 	router.Get("/err", HandlerErr)
-	router.Get("/youtube/channel/stats", cfg.getChannelStats)
+	router.Get("/youtube/stats", cfg.getStats)
+	router.Get("/youtube/stats/{channel}", cfg.getYTChannelStats)
 
 	fs := http.FileServer(http.Dir("."))
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
