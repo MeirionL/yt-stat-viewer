@@ -1,13 +1,17 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/MeirionL/stream_stats/backend/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+
+	_ "github.com/lib/pq"
 )
 
 type Channel struct {
@@ -18,6 +22,7 @@ type Channel struct {
 }
 
 type apiConfig struct {
+	DB                 *database.Queries
 	ytApiKey           string
 	googleClientID     string
 	googleClientSecret string
@@ -31,6 +36,11 @@ func main() {
 	portString := os.Getenv("PORT")
 	if portString == "" {
 		log.Fatal("port is not found in the enviroment")
+	}
+
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("database url is not found in the enviroment")
 	}
 
 	ytApiKey := os.Getenv("YOUTUBE_API_KEY")
@@ -53,7 +63,13 @@ func main() {
 		log.Fatal("twitch client id is not found in enviroment")
 	}
 
+	conn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("unable to establish database connection", err)
+	}
+
 	cfg := apiConfig{
+		DB:                 database.New(conn),
 		ytApiKey:           ytApiKey,
 		googleClientID:     googleClientID,
 		googleClientSecret: googleClientSecret,
@@ -74,6 +90,9 @@ func main() {
 
 	router.Get("/healthz", HandlerReadiness)
 	router.Get("/err", HandlerErr)
+
+	router.Post("/users", cfg.handlerCreateUser)
+
 	router.Get("/stats", cfg.getStats)
 	router.Get("/stats/YouTube/{channel}", cfg.getYTChannelStats)
 	router.Get("/stats/Twitch/{channel}", cfg.getTwitchChannelStats)
