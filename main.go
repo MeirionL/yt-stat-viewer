@@ -18,10 +18,11 @@ type Channel struct {
 }
 
 type apiConfig struct {
-	ytApiKey   string
-	channels   []Channel
-	query      *string
-	maxResults *int64
+	ytApiKey           string
+	googleClientID     string
+	googleClientSecret string
+	twitchClientID     string
+	channels           []Channel
 }
 
 func main() {
@@ -37,9 +38,27 @@ func main() {
 		log.Fatal("youtube api key is not found in the enviroment")
 	}
 
+	googleClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	if googleClientID == "" {
+		log.Fatal("google client id is not found in enviroment")
+	}
+
+	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+	if googleClientSecret == "" {
+		log.Fatal("google client secret is not found in enviroment")
+	}
+
+	twitchClientID := os.Getenv("TWITCH_CLIENT_ID")
+	if twitchClientID == "" {
+		log.Fatal("twitch client id is not found in enviroment")
+	}
+
 	cfg := apiConfig{
-		ytApiKey: ytApiKey,
-		channels: []Channel{},
+		ytApiKey:           ytApiKey,
+		googleClientID:     googleClientID,
+		googleClientSecret: googleClientSecret,
+		twitchClientID:     twitchClientID,
+		channels:           []Channel{},
 	}
 
 	router := chi.NewRouter()
@@ -55,8 +74,10 @@ func main() {
 
 	router.Get("/healthz", HandlerReadiness)
 	router.Get("/err", HandlerErr)
-	router.Get("/youtube/stats", cfg.getStats)
-	router.Get("/youtube/stats/{channel}", cfg.getYTChannelStats)
+	router.Get("/stats", cfg.getStats)
+	router.Get("/stats/YouTube/{channel}", cfg.getYTChannelStats)
+	router.Get("/stats/Twitch/{channel}", cfg.getTwitchChannelStats)
+	router.Get("/stats/Kick/{channel}", cfg.getKickChannelStats)
 
 	fs := http.FileServer(http.Dir("."))
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {

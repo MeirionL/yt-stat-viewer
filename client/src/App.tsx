@@ -20,9 +20,9 @@ function getColorBasedOnTodoDone(platform: string | undefined): string {
     console.log(platform);
     if (platform === "YouTube") {
         return 'red';
-    } else if (platform === 'twitch') {
+    } else if (platform === 'Twitch') {
         return 'purple';
-    } else if (platform === 'kick') {
+    } else if (platform === 'Kick') {
         return 'orange';
     }
     return 'grey';
