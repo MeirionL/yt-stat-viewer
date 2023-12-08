@@ -6,8 +6,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
@@ -16,19 +14,37 @@ func (cfg *apiConfig) getStats(w http.ResponseWriter, r *http.Request) {
 	RespondWithJSON(w, http.StatusOK, cfg.channels)
 }
 
-func (cfg *apiConfig) handleYouTubeAuth(w http.ResponseWriter, r *http.Request) {
-	conf := &oauth2.Config{
-		ClientID:     cfg.googleClientID,
-		ClientSecret: cfg.googleClientSecret,
-		RedirectURL:  "http://localhost:5173",
-		Scopes: []string{"https://www.googleapis.com/auth/youtube.readonly",
-			"https://www.googleapis.com/auth/youtube.channel-memberships.creator",
-			"https://www.googleapis.com/auth/yt-analytics.readonly"},
-		Endpoint: google.Endpoint,
-	}
+func (cfg *apiConfig) handleYoutubeAuth(w http.ResponseWriter, r *http.Request) {
+	// conf := &oauth2.Config{
+	// 	ClientID:     cfg.googleClientID,
+	// 	ClientSecret: cfg.googleClientSecret,
+	// 	RedirectURL:  "http://localhost:5173",
+	// 	Scopes: []string{"https://www.googleapis.com/auth/youtube.readonly",
+	// 		"https://www.googleapis.com/auth/youtube.channel-memberships.creator",
+	// 		"https://www.googleapis.com/auth/yt-analytics.readonly"},
+	// 	Endpoint: google.Endpoint,
+	// }
 
-	url := conf.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	// if code := r.URL.Query().Get("code"); code != "" {
+	// 	// Exchange authorization code for an access token
+	// 	token, err := conf.Exchange(context.Background(), code)
+	// 	if err != nil {
+	// 		// Handle error
+	// 		http.Error(w, "Failed to exchange code for token", http.StatusInternalServerError)
+	// 		return
+	// 	}
+
+	// 	// Access token can now be used to make authorized requests to the YouTube API
+	// 	// Store the access token securely for future API requests
+
+	// 	// Example: Print the access token
+	// 	fmt.Fprintf(w, "Access Token: %s", token.AccessToken)
+	// 	return
+	// }
+
+	// url := conf.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	// http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+
 }
 
 func (cfg *apiConfig) getYTChannelStats(w http.ResponseWriter, r *http.Request) {

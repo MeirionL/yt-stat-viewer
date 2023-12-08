@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/MeirionL/stream_stats/backend/internal/auth"
 	"github.com/MeirionL/stream_stats/backend/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -22,12 +23,10 @@ type Channel struct {
 }
 
 type apiConfig struct {
-	DB                 *database.Queries
-	ytApiKey           string
-	googleClientID     string
-	googleClientSecret string
-	twitchClientID     string
-	channels           []Channel
+	DB             *database.Queries
+	ytApiKey       string
+	twitchClientID string
+	channels       []Channel
 }
 
 func main() {
@@ -48,16 +47,6 @@ func main() {
 		log.Fatal("youtube api key is not found in the enviroment")
 	}
 
-	googleClientID := os.Getenv("GOOGLE_CLIENT_ID")
-	if googleClientID == "" {
-		log.Fatal("google client id is not found in enviroment")
-	}
-
-	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
-	if googleClientSecret == "" {
-		log.Fatal("google client secret is not found in enviroment")
-	}
-
 	twitchClientID := os.Getenv("TWITCH_CLIENT_ID")
 	if twitchClientID == "" {
 		log.Fatal("twitch client id is not found in enviroment")
@@ -69,13 +58,13 @@ func main() {
 	}
 
 	cfg := apiConfig{
-		DB:                 database.New(conn),
-		ytApiKey:           ytApiKey,
-		googleClientID:     googleClientID,
-		googleClientSecret: googleClientSecret,
-		twitchClientID:     twitchClientID,
-		channels:           []Channel{},
+		DB:             database.New(conn),
+		ytApiKey:       ytApiKey,
+		twitchClientID: twitchClientID,
+		channels:       []Channel{},
 	}
+
+	auth.NewAuth()
 
 	router := chi.NewRouter()
 
@@ -92,11 +81,17 @@ func main() {
 	router.Get("/err", HandlerErr)
 
 	router.Post("/users", cfg.handlerCreateUser)
+	router.Get("/users", cfg.handlerGetUsers)
+	router.Get("/users/apikey", cfg.middlewareAuth(cfg.handlerGetUserByAPIKey))
+	router.Put("/users", cfg.middlewareAuth(cfg.handlerUpdateUser))
+	router.Delete("/users", cfg.middlewareAuth(cfg.handlerDeleteUser))
 
 	router.Get("/stats", cfg.getStats)
 	router.Get("/stats/YouTube/{channel}", cfg.getYTChannelStats)
 	router.Get("/stats/Twitch/{channel}", cfg.getTwitchChannelStats)
-	router.Get("/stats/Kick/{channel}", cfg.getKickChannelStats)
+
+	router.Get("/auth/{provider}", getAuthCallback)
+	router.Get("/logout/{provider}", getAuthLogout)
 
 	fs := http.FileServer(http.Dir("."))
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {

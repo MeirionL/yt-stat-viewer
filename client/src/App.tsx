@@ -4,6 +4,7 @@ import '@mantine/core/styles.css';
 import { CheckCircleFillIcon } from "@primer/octicons-react";
 import { useState } from 'react'
 import AddChannel from './components/AddChannel';
+import GrantPermissions from "./components/GrantPermissions";
 
 export interface YTChannel {
     subscribers: number;
@@ -75,6 +76,7 @@ function App() {
             </List>
             <AddChannel setSearchedChannels={setSearchedChannels} />
             {showChannelStats()}
+            <GrantPermissions />
         </Box>
     }</MantineProvider>;
 }
