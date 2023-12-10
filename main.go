@@ -82,16 +82,15 @@ func main() {
 
 	router.Post("/users", cfg.handlerCreateUser)
 	router.Get("/users", cfg.handlerGetUsers)
-	router.Get("/users/apikey", cfg.middlewareAuth(cfg.handlerGetUserByAPIKey))
-	router.Put("/users", cfg.middlewareAuth(cfg.handlerUpdateUser))
-	router.Delete("/users", cfg.middlewareAuth(cfg.handlerDeleteUser))
+	// router.Put("/users", cfg.handlerUpdateUser)
+	// router.Delete("/users", cfg.handlerDeleteUser)
 
 	router.Get("/stats", cfg.getStats)
 	router.Get("/stats/YouTube/{channel}", cfg.getYTChannelStats)
 	router.Get("/stats/Twitch/{channel}", cfg.getTwitchChannelStats)
 
-	router.Get("/auth/{provider}", getAuthCallback)
-	router.Get("/logout/{provider}", getAuthLogout)
+	router.Get("/auth/{provider}", cfg.handlerAuthLogin)
+	router.Get("/logout/{provider}", cfg.handlerAuthLogout)
 
 	fs := http.FileServer(http.Dir("."))
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {

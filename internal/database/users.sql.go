@@ -13,17 +13,19 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (id, created_at, updated_at, name, api_key, oauth_token)
-VALUES ($1, $2, $3, $4, encode(sha256(random()::text::bytea), 'hex'), $5)
-RETURNING id, created_at, updated_at, name, api_key, oauth_token
+INSERT INTO users (id, created_at, updated_at, email, platform, access_token, refresh_token)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, created_at, updated_at, email, platform, access_token, refresh_token
 `
 
 type CreateUserParams struct {
-	ID         uuid.UUID
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	Name       string
-	OauthToken string
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Email        string
+	Platform     string
+	AccessToken  string
+	RefreshToken string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -31,17 +33,20 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.ID,
 		arg.CreatedAt,
 		arg.UpdatedAt,
-		arg.Name,
-		arg.OauthToken,
+		arg.Email,
+		arg.Platform,
+		arg.AccessToken,
+		arg.RefreshToken,
 	)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Name,
-		&i.ApiKey,
-		&i.OauthToken,
+		&i.Email,
+		&i.Platform,
+		&i.AccessToken,
+		&i.RefreshToken,
 	)
 	return i, err
 }
@@ -55,26 +60,8 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const getUserByAPIKey = `-- name: GetUserByAPIKey :one
-SELECT id, created_at, updated_at, name, api_key, oauth_token FROM users WHERE api_key = $1
-`
-
-func (q *Queries) GetUserByAPIKey(ctx context.Context, apiKey string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByAPIKey, apiKey)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Name,
-		&i.ApiKey,
-		&i.OauthToken,
-	)
-	return i, err
-}
-
 const getUsers = `-- name: GetUsers :many
-SELECT id, created_at, updated_at, name, api_key, oauth_token FROM users
+SELECT id, created_at, updated_at, email, platform, access_token, refresh_token FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -90,9 +77,10 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 			&i.ID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Name,
-			&i.ApiKey,
-			&i.OauthToken,
+			&i.Email,
+			&i.Platform,
+			&i.AccessToken,
+			&i.RefreshToken,
 		); err != nil {
 			return nil, err
 		}
@@ -107,35 +95,58 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
-const updateUser = `-- name: UpdateUser :one
+const updateAccessToken = `-- name: UpdateAccessToken :one
 UPDATE users
-SET  updated_at = $2, name = $3, oauth_token = $4
+SET  updated_at = $2, access_token = $3
 WHERE id = $1
-RETURNING id, created_at, updated_at, name, api_key, oauth_token
+RETURNING id, created_at, updated_at, email, platform, access_token, refresh_token
 `
 
-type UpdateUserParams struct {
-	ID         uuid.UUID
-	UpdatedAt  time.Time
-	Name       string
-	OauthToken string
+type UpdateAccessTokenParams struct {
+	ID          uuid.UUID
+	UpdatedAt   time.Time
+	AccessToken string
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUser,
-		arg.ID,
-		arg.UpdatedAt,
-		arg.Name,
-		arg.OauthToken,
-	)
+func (q *Queries) UpdateAccessToken(ctx context.Context, arg UpdateAccessTokenParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateAccessToken, arg.ID, arg.UpdatedAt, arg.AccessToken)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Name,
-		&i.ApiKey,
-		&i.OauthToken,
+		&i.Email,
+		&i.Platform,
+		&i.AccessToken,
+		&i.RefreshToken,
+	)
+	return i, err
+}
+
+const updateRefreshToken = `-- name: UpdateRefreshToken :one
+UPDATE users
+SET  updated_at = $2, refresh_token = $3
+WHERE id = $1
+RETURNING id, created_at, updated_at, email, platform, access_token, refresh_token
+`
+
+type UpdateRefreshTokenParams struct {
+	ID           uuid.UUID
+	UpdatedAt    time.Time
+	RefreshToken string
+}
+
+func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateRefreshToken, arg.ID, arg.UpdatedAt, arg.RefreshToken)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.Platform,
+		&i.AccessToken,
+		&i.RefreshToken,
 	)
 	return i, err
 }

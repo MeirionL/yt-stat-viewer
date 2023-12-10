@@ -19,9 +19,9 @@ func (cfg *apiConfig) handleYoutubeAuth(w http.ResponseWriter, r *http.Request) 
 	// 	ClientID:     cfg.googleClientID,
 	// 	ClientSecret: cfg.googleClientSecret,
 	// 	RedirectURL:  "http://localhost:5173",
-	// 	Scopes: []string{"https://www.googleapis.com/auth/youtube.readonly",
-	// 		"https://www.googleapis.com/auth/youtube.channel-memberships.creator",
-	// 		"https://www.googleapis.com/auth/yt-analytics.readonly"},
+	// Scopes: []string{"https://www.googleapis.com/auth/youtube.readonly",
+	// 	"https://www.googleapis.com/auth/youtube.channel-memberships.creator",
+	// 	"https://www.googleapis.com/auth/yt-analytics.readonly"},
 	// 	Endpoint: google.Endpoint,
 	// }
 
