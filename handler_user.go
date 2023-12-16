@@ -12,14 +12,64 @@ import (
 	"github.com/markbates/goth"
 )
 
+func (cfg *apiConfig) handleUser(w http.ResponseWriter, r *http.Request, u goth.User) {
+	users, err := cfg.DB.GetUsersByDetails(r.Context(), database.GetUsersByDetailsParams{
+		Email:    u.Email,
+		Platform: u.Provider,
+	})
+	if err != nil {
+		RespondWithError(w, 400, fmt.Sprintf("unable to get users by details: %v", err))
+	}
+
+	if len(users) == 0 {
+		cfg.createUser(w, r, u)
+		return
+	}
+
+	if len(users) > 1 {
+		RespondWithError(w, 400, fmt.Sprintf("multiple users with these details. Needs managing: %v", err))
+		return
+	}
+
+	err = cfg.DB.UpdateTokens(r.Context(), database.UpdateTokensParams{
+		ID:           users[0].ID,
+		UpdatedAt:    time.Now().UTC(),
+		AccessToken:  u.AccessToken,
+		RefreshToken: u.RefreshToken,
+	})
+	if err != nil {
+		RespondWithError(w, 400, fmt.Sprintf("unable to update tokens of user: %v", err))
+		return
+	}
+	return
+}
+
 func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request, u goth.User) {
-	var platform string
+	var (
+		platform string
+		channel  string
+	)
 	if u.Provider == "google" {
 		platform = "youtube"
+		channelName, err := getAccountYTChannel(u)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			RespondWithError(w, 400, fmt.Sprintf("can't get channel for google account: %v", err))
+			return
+		}
+		channel = channelName
 	} else if u.Provider == "twitch" {
 		platform = "twitch"
+		channelName, err := cfg.getAccountTwitchChannel(u)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			RespondWithError(w, 400, fmt.Sprintf("can't get channel for twitch account: %v", err))
+			return
+		}
+		channel = channelName
 	} else {
-		RespondWithError(w, 400, "Invalid platform")
+		RespondWithError(w, 400, "invalid platform")
+		return
 	}
 
 	user, err := cfg.DB.CreateUser(r.Context(), database.CreateUserParams{
@@ -28,6 +78,8 @@ func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request, u goth.
 		UpdatedAt:    time.Now().UTC(),
 		Email:        u.Email,
 		Platform:     platform,
+		ChannelID:    u.IDToken,
+		ChannelName:  channel,
 		AccessToken:  u.AccessToken,
 		RefreshToken: u.RefreshToken,
 	})

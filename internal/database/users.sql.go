@@ -13,9 +13,9 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (id, created_at, updated_at, email, platform, access_token, refresh_token)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, created_at, updated_at, email, platform, access_token, refresh_token
+INSERT INTO users (id, created_at, updated_at, email, platform, channel_id, channel_name, access_token, refresh_token)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, created_at, updated_at, email, platform, channel_id, channel_name, access_token, refresh_token
 `
 
 type CreateUserParams struct {
@@ -24,6 +24,8 @@ type CreateUserParams struct {
 	UpdatedAt    time.Time
 	Email        string
 	Platform     string
+	ChannelID    string
+	ChannelName  string
 	AccessToken  string
 	RefreshToken string
 }
@@ -35,6 +37,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.UpdatedAt,
 		arg.Email,
 		arg.Platform,
+		arg.ChannelID,
+		arg.ChannelName,
 		arg.AccessToken,
 		arg.RefreshToken,
 	)
@@ -45,6 +49,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.Email,
 		&i.Platform,
+		&i.ChannelID,
+		&i.ChannelName,
 		&i.AccessToken,
 		&i.RefreshToken,
 	)
@@ -61,7 +67,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, created_at, updated_at, email, platform, access_token, refresh_token FROM users
+SELECT id, created_at, updated_at, email, platform, channel_id, channel_name, access_token, refresh_token FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -79,6 +85,50 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 			&i.UpdatedAt,
 			&i.Email,
 			&i.Platform,
+			&i.ChannelID,
+			&i.ChannelName,
+			&i.AccessToken,
+			&i.RefreshToken,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUsersByDetails = `-- name: GetUsersByDetails :many
+SELECT id, created_at, updated_at, email, platform, channel_id, channel_name, access_token, refresh_token FROM users WHERE email = $1 AND platform = $2
+`
+
+type GetUsersByDetailsParams struct {
+	Email    string
+	Platform string
+}
+
+func (q *Queries) GetUsersByDetails(ctx context.Context, arg GetUsersByDetailsParams) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getUsersByDetails, arg.Email, arg.Platform)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Email,
+			&i.Platform,
+			&i.ChannelID,
+			&i.ChannelName,
 			&i.AccessToken,
 			&i.RefreshToken,
 		); err != nil {
@@ -99,7 +149,7 @@ const updateAccessToken = `-- name: UpdateAccessToken :one
 UPDATE users
 SET  updated_at = $2, access_token = $3
 WHERE id = $1
-RETURNING id, created_at, updated_at, email, platform, access_token, refresh_token
+RETURNING id, created_at, updated_at, email, platform, channel_id, channel_name, access_token, refresh_token
 `
 
 type UpdateAccessTokenParams struct {
@@ -117,6 +167,8 @@ func (q *Queries) UpdateAccessToken(ctx context.Context, arg UpdateAccessTokenPa
 		&i.UpdatedAt,
 		&i.Email,
 		&i.Platform,
+		&i.ChannelID,
+		&i.ChannelName,
 		&i.AccessToken,
 		&i.RefreshToken,
 	)
@@ -127,7 +179,7 @@ const updateRefreshToken = `-- name: UpdateRefreshToken :one
 UPDATE users
 SET  updated_at = $2, refresh_token = $3
 WHERE id = $1
-RETURNING id, created_at, updated_at, email, platform, access_token, refresh_token
+RETURNING id, created_at, updated_at, email, platform, channel_id, channel_name, access_token, refresh_token
 `
 
 type UpdateRefreshTokenParams struct {
@@ -145,8 +197,34 @@ func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshToken
 		&i.UpdatedAt,
 		&i.Email,
 		&i.Platform,
+		&i.ChannelID,
+		&i.ChannelName,
 		&i.AccessToken,
 		&i.RefreshToken,
 	)
 	return i, err
+}
+
+const updateTokens = `-- name: UpdateTokens :exec
+UPDATE users
+SET  updated_at = $2, access_token = $3, refresh_token = $4
+WHERE id = $1
+RETURNING id, created_at, updated_at, email, platform, channel_id, channel_name, access_token, refresh_token
+`
+
+type UpdateTokensParams struct {
+	ID           uuid.UUID
+	UpdatedAt    time.Time
+	AccessToken  string
+	RefreshToken string
+}
+
+func (q *Queries) UpdateTokens(ctx context.Context, arg UpdateTokensParams) error {
+	_, err := q.db.ExecContext(ctx, updateTokens,
+		arg.ID,
+		arg.UpdatedAt,
+		arg.AccessToken,
+		arg.RefreshToken,
+	)
+	return err
 }

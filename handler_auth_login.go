@@ -12,10 +12,15 @@ import (
 func (cfg *apiConfig) handlerAuthLogin(w http.ResponseWriter, r *http.Request) {
 	provider := chi.URLParam(r, "provider")
 	r = r.WithContext(context.WithValue(context.Background(), "provider", provider))
+	// fmt.Print(w)
+	// fmt.Print("\n\n")
+	// fmt.Print(r)
+	// fmt.Print("\n\n")
+
 	if user, err := gothic.CompleteUserAuth(w, r); err == nil {
-		fmt.Println(user.Provider)
+		fmt.Println("we get here")
 		http.Redirect(w, r, "http://localhost:5173", http.StatusFound)
-		cfg.createUser(w, r, user)
+		cfg.handleUser(w, r, user)
 		return
 	} else {
 		fmt.Println("it is time to begin logging in!")

@@ -37,9 +37,9 @@ func NewAuth() {
 	goth.UseProviders(
 		google.New(
 			googleClientID, googleClientSecret, "http://localhost:8080/auth/google",
-			// "https://www.googleapis.com/auth/youtube.readonly",
-			// "https://www.googleapis.com/auth/youtube.channel-memberships.creator",
-			// "https://www.googleapis.com/auth/yt-analytics.readonly",
+			"https://www.googleapis.com/auth/youtube.readonly",
+			"https://www.googleapis.com/auth/youtube.channel-memberships.creator",
+			"https://www.googleapis.com/auth/yt-analytics.readonly",
 		),
 		twitch.New(
 			twitchClientID, twitchClientSecret, "http://localhost:8080/auth/twitch",

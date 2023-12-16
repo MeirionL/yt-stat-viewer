@@ -73,7 +73,7 @@ func main() {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
@@ -86,6 +86,7 @@ func main() {
 	// router.Delete("/users", cfg.handlerDeleteUser)
 
 	router.Get("/stats", cfg.getStats)
+	// router.Get("/stats/YouTube/auth", cfg.handleYoutubeAuth)
 	router.Get("/stats/YouTube/{channel}", cfg.getYTChannelStats)
 	router.Get("/stats/Twitch/{channel}", cfg.getTwitchChannelStats)
 

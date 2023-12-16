@@ -16,6 +16,8 @@ type User struct {
 	UpdatedAt    time.Time
 	Email        string
 	Platform     string
+	ChannelID    string
+	ChannelName  string
 	AccessToken  string
 	RefreshToken string
 }

@@ -165,31 +165,37 @@ var CompleteUserAuth = func(res http.ResponseWriter, req *http.Request) (goth.Us
 
 	providerName, err := GetProviderName(req)
 	if err != nil {
+		fmt.Printf("error is here %v 1\n\n", err)
 		return goth.User{}, err
 	}
 
 	provider, err := goth.GetProvider(providerName)
 	if err != nil {
+		fmt.Printf("error is here %v 2\n\n", err)
 		return goth.User{}, err
 	}
 
 	value, err := GetFromSession(providerName, req)
 	if err != nil {
+		fmt.Printf("error is here %v 3\n\n", err)
 		return goth.User{}, err
 	}
 	defer Logout(res, req)
 	sess, err := provider.UnmarshalSession(value)
 	if err != nil {
+		fmt.Printf("error is here %v 4\n\n", err)
 		return goth.User{}, err
 	}
 
 	err = validateState(req, sess)
 	if err != nil {
+		fmt.Printf("error is here %v 5\n\n", err)
 		return goth.User{}, err
 	}
 
 	user, err := provider.FetchUser(sess)
 	if err == nil {
+		fmt.Printf("error is here %v 6\n\n", err)
 		// user can be found with existing session data
 		return user, err
 	}
@@ -203,12 +209,14 @@ var CompleteUserAuth = func(res http.ResponseWriter, req *http.Request) (goth.Us
 	// get new token and retry fetch
 	_, err = sess.Authorize(provider, params)
 	if err != nil {
+		fmt.Printf("error is here %v 7\n\n", err)
 		return goth.User{}, err
 	}
 
 	err = StoreInSession(providerName, sess.Marshal(), req, res)
 
 	if err != nil {
+		fmt.Printf("error is here %v 8\n\n", err)
 		return goth.User{}, err
 	}
 
