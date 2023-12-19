@@ -22,6 +22,7 @@ func (cfg *apiConfig) handleUser(w http.ResponseWriter, r *http.Request, u goth.
 	}
 
 	if len(users) == 0 {
+		fmt.Println(1)
 		cfg.createUser(w, r, u)
 		return
 	}
@@ -41,7 +42,8 @@ func (cfg *apiConfig) handleUser(w http.ResponseWriter, r *http.Request, u goth.
 		RespondWithError(w, 400, fmt.Sprintf("unable to update tokens of user: %v", err))
 		return
 	}
-	return
+
+	fmt.Printf("tokens for user %v updated\n", u.UserID)
 }
 
 func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request, u goth.User) {
@@ -60,6 +62,7 @@ func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request, u goth.
 		channel = channelName
 	} else if u.Provider == "twitch" {
 		platform = "twitch"
+		fmt.Println(3)
 		channelName, err := cfg.getAccountTwitchChannel(u)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -78,7 +81,7 @@ func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request, u goth.
 		UpdatedAt:    time.Now().UTC(),
 		Email:        u.Email,
 		Platform:     platform,
-		ChannelID:    u.IDToken,
+		ChannelID:    u.UserID,
 		ChannelName:  channel,
 		AccessToken:  u.AccessToken,
 		RefreshToken: u.RefreshToken,

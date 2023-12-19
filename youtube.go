@@ -83,6 +83,7 @@ func getAccountYTChannel(u goth.User) (string, error) {
 	fmt.Printf("\nall YT channels found for user: %v\n", channelNames)
 	fmt.Printf("\nID of first YT channel: %v\n", response.Items[0].Id)
 	fmt.Printf("\nID of user: %v\n", u.IDToken)
+	fmt.Printf("\nID of user could also be: %v\n", u.UserID)
 
 	return channelNames[0], nil
 }

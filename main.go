@@ -90,7 +90,8 @@ func main() {
 	router.Get("/stats/YouTube/{channel}", cfg.getYTChannelStats)
 	router.Get("/stats/Twitch/{channel}", cfg.getTwitchChannelStats)
 
-	router.Get("/auth/{provider}", cfg.handlerAuthLogin)
+	router.Get("/auth/{provider}/callback", cfg.handlerAuthCallbackFunction)
+	router.Get("/auth/{provider}", cfg.handlerBeginAuthProviderCallback)
 	router.Get("/logout/{provider}", cfg.handlerAuthLogout)
 
 	fs := http.FileServer(http.Dir("."))
