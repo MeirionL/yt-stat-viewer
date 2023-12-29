@@ -11,14 +11,13 @@ function AddChannel({
     setSearchedChannels: React.Dispatch<React.SetStateAction<YTChannel[]>>;
 }) {
     const [query, setQuery] = useState('')
-    const [platform, setPlatform] = useState('');
 
     const handleSearch = (searchText: string) => {
         setQuery(searchText);
     };
 
     async function handleSearchEnter(title: string) {
-        const data = await fetch(`${ENDPOINT}/stats/${platform}/${title}`, {
+        const data = await fetch(`${ENDPOINT}/stats/${title}`, {
             method: 'GET',
             headers: {
                 "Content-Type": "application/json"
@@ -36,18 +35,6 @@ function AddChannel({
                 onKeyDown={handleSearch}
                 handleSearchEnter={handleSearchEnter}
             ></SearchBar>
-            <Select
-                placeholder="Streaming platform"
-                data={['YouTube', 'Twitch', 'Kick']}
-                value={platform}
-                onChange={(value) => {
-                    if (value !== null) {
-                        setPlatform(value);
-                    }
-                }}
-                clearable
-                style={{ width: '300px' }}
-            ></Select>
             <Button type="submit" onClick={() => handleSearchEnter(query)}>Add channel</Button>
         </>
     )

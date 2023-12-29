@@ -24,6 +24,7 @@ type Channel struct {
 
 type apiConfig struct {
 	DB             *database.Queries
+	JWTSecret      string
 	ytApiKey       string
 	twitchClientID string
 	channels       []Channel
@@ -40,6 +41,11 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatal("database url is not found in the enviroment")
+	}
+
+	JWTSecret := os.Getenv("JWT_SECRET")
+	if JWTSecret == "" {
+		log.Fatal("JWT secret is not found in the enviroment")
 	}
 
 	ytApiKey := os.Getenv("YOUTUBE_API_KEY")
@@ -59,6 +65,7 @@ func main() {
 
 	cfg := apiConfig{
 		DB:             database.New(conn),
+		JWTSecret:      JWTSecret,
 		ytApiKey:       ytApiKey,
 		twitchClientID: twitchClientID,
 		channels:       []Channel{},
@@ -87,12 +94,11 @@ func main() {
 
 	router.Get("/stats", cfg.getStats)
 	// router.Get("/stats/YouTube/auth", cfg.handleYoutubeAuth)
-	router.Get("/stats/YouTube/{channel}", cfg.getYTChannelStats)
-	router.Get("/stats/Twitch/{channel}", cfg.getTwitchChannelStats)
+	router.Get("/stats/{channel}", cfg.getYTChannelStats)
 
-	router.Get("/auth/{provider}/callback", cfg.handlerAuthCallbackFunction)
-	router.Get("/auth/{provider}", cfg.handlerBeginAuthProviderCallback)
-	router.Get("/logout/{provider}", cfg.handlerAuthLogout)
+	router.Get("/auth/callback", cfg.get_google_token)
+	router.Get("/auth", google_auth)
+	router.Get("/logout/{id}", cfg.logout)
 
 	fs := http.FileServer(http.Dir("."))
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {

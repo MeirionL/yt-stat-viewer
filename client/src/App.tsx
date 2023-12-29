@@ -15,23 +15,8 @@ export interface YTChannel {
 
 export const ENDPOINT = 'http://localhost:8080'
 
-const fetcher = (url: string) => fetch(`${ENDPOINT}/${url}`).then(r => r.json());
-
-function getColorBasedOnTodoDone(platform: string | undefined): string {
-    console.log(platform);
-    if (platform === "YouTube") {
-        return 'red';
-    } else if (platform === 'Twitch') {
-        return 'purple';
-    } else if (platform === 'Kick') {
-        return 'orange';
-    }
-    return 'grey';
-}
-
 function App() {
 
-    const { data, mutate } = useSWR<YTChannel[]>(`youtube/stats`, fetcher);
     const [displayedChannel, setDisplayedChannel] = useState<YTChannel | null>(null);
     const [searchedChannels, setSearchedChannels] = useState<YTChannel[]>([]);
 
@@ -54,7 +39,7 @@ function App() {
     }
 
     return <MantineProvider>{
-        <Box m="xl" w="xl" p="xl">
+        <Box m="xl" p="xl">
 
             <List spacing="xl" size="xl" mb={12} center>
                 {searchedChannels?.map((channel: YTChannel) => {
@@ -64,7 +49,7 @@ function App() {
                             key={`channels_list__${channel.title}`}
 
                             icon={
-                                <ThemeIcon color={getColorBasedOnTodoDone(channel.platform)} size={24} radius="xl">
+                                <ThemeIcon color="red" size={24} radius="xl">
                                     <CheckCircleFillIcon size={20} />
                                 </ThemeIcon>
                             }

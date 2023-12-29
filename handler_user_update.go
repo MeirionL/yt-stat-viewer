@@ -9,7 +9,7 @@ import (
 
 func (cfg *apiConfig) handlerDeleteUser(w http.ResponseWriter, r *http.Request, user database.User) {
 
-	err := cfg.DB.DeleteUser(r.Context(), user.ID)
+	_, err := cfg.DB.DeleteUser(r.Context(), user.ID)
 	if err != nil {
 		RespondWithError(w, 400, fmt.Sprintf("couldn't delete user: %v", err))
 		return

@@ -1,47 +1,39 @@
-import { useState } from 'react'
-import { Button, Select } from '@mantine/core'
+import { Button, TextInput } from '@mantine/core';
+import { ChangeEvent, useState } from 'react';
 
 function GrantPermissions() {
-    const [platform, setPlatform] = useState('');
+    const [userId, setUserId] = useState<string>('');
 
     const handleGrantPermissions = () => {
-        if (platform === 'YouTube') {
-            window.location.href = "http://localhost:8080/auth/google";
-        } else if (platform === 'Twitch') {
-            window.location.href = "http://localhost:8080/auth/twitch";
-        } else {
-            console.log("Please select a platform")
-        }
+        window.location.href = 'http://localhost:8080/auth';
     };
 
     const handleRemovePermissions = () => {
-        if (platform === 'YouTube') {
-            window.location.href = "http://localhost:8080/logout/google";
-        } else if (platform === 'Twitch') {
-            window.location.href = "http://localhost:8080/logout/twitch";
+        if (userId) {
+            window.location.href = `http://localhost:8080/logout/${userId}`;
         } else {
-            console.log("Please select a platform")
+            console.error('Please enter a user ID');
         }
+    };
+
+    const handleUserIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+        setUserId(event.target.value);
     };
 
     return (
         <>
-            <Select
-                placeholder="Permission streaming platform"
-                data={['YouTube', 'Twitch']}
-                value={platform}
-                onChange={(value) => {
-                    if (value !== null) {
-                        setPlatform(value);
-                    }
-                }}
-                clearable
-                style={{ width: '300px' }}
-            ></Select>
             <Button onClick={handleGrantPermissions}>Login</Button>
+            <TextInput
+                label="Enter ID"
+                description="Enter ID for account you want to log out"
+                value={userId}
+                onChange={(handleUserIdChange)}
+                size='sm'
+                style={{ marginBottom: '8px' }}
+            />
             <Button onClick={handleRemovePermissions}>Logout</Button>
         </>
-    )
+    );
 }
 
 export default GrantPermissions;
