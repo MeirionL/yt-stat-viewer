@@ -4,11 +4,11 @@ import { ChangeEvent, useState } from 'react';
 function GrantPermissions() {
     const [userId, setUserId] = useState<string>('');
 
-    const handleGrantPermissions = () => {
+    const handleGrantPermissions = (): void => {
         window.location.href = 'http://localhost:8080/auth';
     };
 
-    const handleRemovePermissions = () => {
+    const handleRemovePermissions = (): void => {
         if (userId) {
             window.location.href = `http://localhost:8080/logout/${userId}`;
         } else {
@@ -16,7 +16,7 @@ function GrantPermissions() {
         }
     };
 
-    const handleUserIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleUserIdChange = (event: ChangeEvent<HTMLInputElement>): void => {
         setUserId(event.target.value);
     };
 
@@ -25,9 +25,9 @@ function GrantPermissions() {
             <Button onClick={handleGrantPermissions}>Login</Button>
             <TextInput
                 label="Enter ID"
-                description="Enter ID for account you want to log out"
+                description="Enter ID for account you want to logout"
                 value={userId}
-                onChange={(handleUserIdChange)}
+                onChange={handleUserIdChange}
                 size='sm'
                 style={{ marginBottom: '8px' }}
             />

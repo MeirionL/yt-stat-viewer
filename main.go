@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/MeirionL/stream_stats/backend/internal/auth"
 	"github.com/MeirionL/stream_stats/backend/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -16,18 +15,19 @@ import (
 )
 
 type Channel struct {
-	Subscribers int    `json:"subscribers"`
-	Title       string `json:"title"`
-	Views       int    `json:"views"`
-	Platform    string `json:"platform"`
+	Title          string `json:"title"`
+	Subscribers    int    `json:"subscribers"`
+	Videos         int    `json:"videos"`
+	Views          int    `json:"views"`
+	LastStreamTime string `json:"last_stream_time"`
+	IsLive         string `json:"is_live"`
+	StreamTitle    string `json:"stream_title"`
 }
 
 type apiConfig struct {
-	DB             *database.Queries
-	JWTSecret      string
-	ytApiKey       string
-	twitchClientID string
-	channels       []Channel
+	DB       *database.Queries
+	ytApiKey string
+	channels []Channel
 }
 
 func main() {
@@ -43,19 +43,9 @@ func main() {
 		log.Fatal("database url is not found in the enviroment")
 	}
 
-	JWTSecret := os.Getenv("JWT_SECRET")
-	if JWTSecret == "" {
-		log.Fatal("JWT secret is not found in the enviroment")
-	}
-
 	ytApiKey := os.Getenv("YOUTUBE_API_KEY")
 	if ytApiKey == "" {
 		log.Fatal("youtube api key is not found in the enviroment")
-	}
-
-	twitchClientID := os.Getenv("TWITCH_CLIENT_ID")
-	if twitchClientID == "" {
-		log.Fatal("twitch client id is not found in enviroment")
 	}
 
 	conn, err := sql.Open("postgres", dbURL)
@@ -64,14 +54,10 @@ func main() {
 	}
 
 	cfg := apiConfig{
-		DB:             database.New(conn),
-		JWTSecret:      JWTSecret,
-		ytApiKey:       ytApiKey,
-		twitchClientID: twitchClientID,
-		channels:       []Channel{},
+		DB:       database.New(conn),
+		ytApiKey: ytApiKey,
+		channels: []Channel{},
 	}
-
-	auth.NewAuth()
 
 	router := chi.NewRouter()
 
@@ -87,17 +73,11 @@ func main() {
 	router.Get("/healthz", HandlerReadiness)
 	router.Get("/err", HandlerErr)
 
-	router.Post("/users", cfg.handlerCreateUser)
-	router.Get("/users", cfg.handlerGetUsers)
-	// router.Put("/users", cfg.handlerUpdateUser)
-	// router.Delete("/users", cfg.handlerDeleteUser)
-
-	router.Get("/stats", cfg.getStats)
-	// router.Get("/stats/YouTube/auth", cfg.handleYoutubeAuth)
 	router.Get("/stats/{channel}", cfg.getYTChannelStats)
 
 	router.Get("/auth/callback", cfg.get_google_token)
 	router.Get("/auth", google_auth)
+
 	router.Get("/logout/{id}", cfg.logout)
 
 	fs := http.FileServer(http.Dir("."))

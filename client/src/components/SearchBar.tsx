@@ -2,17 +2,15 @@ import { ChangeEvent, KeyboardEvent } from 'react';
 
 interface SearchBarProps {
     onSearch: (searchText: string) => void;
-    onKeyDown: (searchText: string) => void;
     handleSearchEnter: (title: string) => Promise<void>;
-    className?: string;
 }
 
 const SearchBar = ({ onSearch, handleSearchEnter }: SearchBarProps) => {
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
         onSearch(e.target.value);
     };
 
-    const handleKeyPress = async (e: KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyPress = async (e: KeyboardEvent<HTMLInputElement>): Promise<void> => {
         if (e.key === 'Enter') {
             await handleSearchEnter(e.currentTarget.value);
         }

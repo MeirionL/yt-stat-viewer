@@ -1,43 +1,36 @@
-import { useState } from 'react'
-import { useForm } from '@mantine/form';
-import { Button, Modal, Group, TextInput, Textarea, Select } from '@mantine/core'
-import { ENDPOINT, YTChannel } from "../App"
-import { KeyedMutator } from 'swr';
+import { useState } from 'react';
+import { Button } from '@mantine/core';
+import { ENDPOINT, YTChannel } from '../App';
 import SearchBar from './SearchBar';
 
-function AddChannel({
-    setSearchedChannels,
-}: {
+interface AddChannelProps {
     setSearchedChannels: React.Dispatch<React.SetStateAction<YTChannel[]>>;
-}) {
-    const [query, setQuery] = useState('')
+}
 
-    const handleSearch = (searchText: string) => {
+function AddChannel({ setSearchedChannels }: AddChannelProps) {
+    const [query, setQuery] = useState('');
+
+    const handleSearch = (searchText: string): void => {
         setQuery(searchText);
     };
 
-    async function handleSearchEnter(title: string) {
-        const data = await fetch(`${ENDPOINT}/stats/${title}`, {
+    const handleSearchEnter = async (title: string): Promise<void> => {
+        const data: YTChannel[] = await fetch(`${ENDPOINT}/stats/${title}`, {
             method: 'GET',
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json',
             },
         }).then((r) => r.json());
 
-        setSearchedChannels(data)
-    }
+        setSearchedChannels(data);
+    };
 
     return (
         <>
-            <SearchBar
-                onSearch={handleSearch}
-                className="search-bar"
-                onKeyDown={handleSearch}
-                handleSearchEnter={handleSearchEnter}
-            ></SearchBar>
-            <Button type="submit" onClick={() => handleSearchEnter(query)}>Add channel</Button>
+            <SearchBar onSearch={handleSearch} handleSearchEnter={handleSearchEnter} />
+            <Button onClick={() => handleSearchEnter(query)}>Add channel</Button>
         </>
-    )
+    );
 }
 
 export default AddChannel;

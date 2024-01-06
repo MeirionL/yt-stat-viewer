@@ -100,60 +100,6 @@ func (q *Queries) GetUserByChannelName(ctx context.Context, channelName string) 
 	return i, err
 }
 
-const getUserByID = `-- name: GetUserByID :one
-SELECT id, created_at, updated_at, channel_id, channel_name, access_token, refresh_token FROM users WHERE id = $1
-`
-
-func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByID, id)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.ChannelID,
-		&i.ChannelName,
-		&i.AccessToken,
-		&i.RefreshToken,
-	)
-	return i, err
-}
-
-const getUsers = `-- name: GetUsers :many
-SELECT id, created_at, updated_at, channel_id, channel_name, access_token, refresh_token FROM users
-`
-
-func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, getUsers)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []User
-	for rows.Next() {
-		var i User
-		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.ChannelID,
-			&i.ChannelName,
-			&i.AccessToken,
-			&i.RefreshToken,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateAccessToken = `-- name: UpdateAccessToken :one
 UPDATE users
 SET  updated_at = $2, access_token = $3
@@ -180,58 +126,6 @@ func (q *Queries) UpdateAccessToken(ctx context.Context, arg UpdateAccessTokenPa
 		&i.RefreshToken,
 	)
 	return i, err
-}
-
-const updateRefreshToken = `-- name: UpdateRefreshToken :one
-UPDATE users
-SET  updated_at = $2, refresh_token = $3
-WHERE id = $1
-RETURNING id, created_at, updated_at, channel_id, channel_name, access_token, refresh_token
-`
-
-type UpdateRefreshTokenParams struct {
-	ID           uuid.UUID
-	UpdatedAt    time.Time
-	RefreshToken string
-}
-
-func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateRefreshToken, arg.ID, arg.UpdatedAt, arg.RefreshToken)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.ChannelID,
-		&i.ChannelName,
-		&i.AccessToken,
-		&i.RefreshToken,
-	)
-	return i, err
-}
-
-const updateTokens = `-- name: UpdateTokens :exec
-UPDATE users
-SET  updated_at = $2, access_token = $3, refresh_token = $4
-WHERE id = $1
-RETURNING id, created_at, updated_at, channel_id, channel_name, access_token, refresh_token
-`
-
-type UpdateTokensParams struct {
-	ID           uuid.UUID
-	UpdatedAt    time.Time
-	AccessToken  string
-	RefreshToken string
-}
-
-func (q *Queries) UpdateTokens(ctx context.Context, arg UpdateTokensParams) error {
-	_, err := q.db.ExecContext(ctx, updateTokens,
-		arg.ID,
-		arg.UpdatedAt,
-		arg.AccessToken,
-		arg.RefreshToken,
-	)
-	return err
 }
 
 const updateUser = `-- name: UpdateUser :exec
